@@ -106,7 +106,7 @@ REDDIT_MAX_RETRIES = 5
 TAGPRO_PROFILE_DOMAIN = "tagpro-radius.koalabeast.com"
 
 
-BOT_USER_AGENT = "/r/tagpro flair bot"
+BOT_USER_AGENT = "/r/tagpro flair helper"
 
 LOGIN_REDIRECT_URL = '/'
 LOGIN_ERROR_URL = '/'

@@ -1,7 +1,7 @@
 BeautifulSoup==3.2.1
 Django==1.6.7
 django-toolbelt==0.0.1
-praw==2.1.18
+praw==3.2.1
 -e git+https://github.com/omab/python-social-auth.git@1b56357c5a8365310507e89385457b1d3df9781b#egg=python-social-auth
 raven==5.0.0
 requests==2.3.0
