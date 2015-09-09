@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 FLAIR_DATA = [
-    ("Developer2", "TagPro Developer", "-32px -16px"),
+    ("Developer", "TagPro Developer", "-32px -16px"),
     ("Contributor", "Community Contributor", "0px -16px"),
     ("Moderator", "Moderator", "-96px 0px"),
-    ("Donator", "Level 1 Donor ($10)", "-16px -16px"),
-    ("Donator2", "Level 2 Donor ($40)", "-48px -16px"),
-    ("Donator3", "Level 3 Donor ($100)", "-64px -16px"),
-    ("Donator4", "Level 4 Donor ($200)", "-112px -16px"),
+    ("Donor", "Level 1 Donor ($10)", "-16px -16px"),
+    ("Donor2", "Level 2 Donor ($40)", "-48px -16px"),
+    ("Donor3", "Level 3 Donor ($100)", "-64px -16px"),
+    ("Donor4", "Level 4 Donor ($200)", "-112px -16px"),
     ("Bitcoin", "Bitcoin Donor (Any Amount)", "-128px -16px"),
     ("Contest", "Community Contest Winner", "-80px -16px"),
     ("Monthly", "Monthly Leader Board Winner", "-32px 0px"),
