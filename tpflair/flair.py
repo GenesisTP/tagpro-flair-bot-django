@@ -29,6 +29,8 @@ FLAIR_DATA = [
     ("Easter2", "Racing for Eggs", "0px -48px"),
     ("Easter3", "Racing For Carrots", "-16px -48px"),
     ("Lgbt", "All balls are created equal!", "-32px -48px"),
+    ("Halloween2", "Easy as Pumpkin Pie", "-48px -48px"),
+    ("Witch", "Lighter Than a Duck", "-64px -48px"),
     ("Bacon", "Bacon (6&#176;)", "0px -80px"),
     ("Moon", "Moon (11&#176;)", "-16px -80px"),
     ("Penguin", "Penguin (17&#176;)", "-112px -96px"),
