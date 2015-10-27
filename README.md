@@ -4,6 +4,48 @@
 This is a Django project to allow users to assign their own Reddit flair based
 on what they have earned with their TagPro profile.
 
+# Development
+
+To do anything, you need to go into your [Reddit apps] and create a new web app for development and Heroku.  Your app in development should have the `redirect_uri` set to `http://localhost:5000/complete/reddit/`.  When you have a Heroku instance, the host should be that Heroku instance's name instead of localhost:port. If you decide to run locally on a different port don't forget to change it in your Reddit app.  If you want to support SSL on Heroku, you need to create a separate web app on Reddit for that too (because `https://...` is a different string than `http://...`).
+
+## Heroku
+
+To deploy to Heroku you'll need to install the [Heroku client], and then run `heroku login` followed by `heroku create` (in this directory).  From then on you can `git push heroku` to deploy.
+
+[Heroku client]: https://toolbelt.heroku.com/
+
+## Local development
+
+To make it easy, install the Heroku CLI above if you haven't.
+
+Set up your Python virtual environment and dependencies
+
+```
+virtualenv ENV
+source ENV/bin/activate
+pip install -r requirements.txt
+```
+
+Set up the database
+
+```
+./manage.py syncdb --settings=tagpro_flair_bot.settings.development
+```
+
+Make a copy of `.env.sample` and call it `.env`, and fill in those settings with your stuff.
+
+### Run it locally
+```
+heroku local dev -e .env
+
+# If you want to use a different port:
+heroku local dev -e .env -p 8000
+
+# If you set all the environment in .env yourself you can also do
+./manage.py runserver
+```
+
+# Environment
 The following *environmental variables* need to be set to run the app:
 
 * ``SOCIAL_AUTH_REDDIT_KEY`` and ``SOCIAL_AUTH_REDDIT_SECRET``
