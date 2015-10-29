@@ -1,5 +1,5 @@
 from django.core.management.base import NoArgsCommand
-from django.contrib.auth.models import User
+from tagpro_flair_bot.models import TagProUser as User
 
 
 class Command(NoArgsCommand):
