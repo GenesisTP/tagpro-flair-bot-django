@@ -15,8 +15,10 @@ def deauth_tagpro(*args, **kwargs):
     request = kwargs.get('strategy').request
     if 'tp_authenticated' in request.session:
         del request.session['tp_authenticated']
-    if 'tp_profile' in request.session:
-        del request.session['tp_profile']
+    if 'tp_server' in request.session:
+        del request.session['tp_server']
+    if 'tp_profile_id' in request.session:
+        del request.session['tp_profile_id']
     if 'available_flair' in request.session:
         del request.session['available_flair']
     if 'current_flair' in request.session:

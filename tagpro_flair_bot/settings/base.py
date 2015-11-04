@@ -103,8 +103,6 @@ REDDIT_MOD_PASSWORD = os.environ.get('REDDIT_MOD_PASSWORD', None)
 REDDIT_MOD_SUBREDDIT = os.environ.get('REDDIT_MOD_SUBREDDIT', None)
 REDDIT_MAX_RETRIES = 5
 
-TAGPRO_PROFILE_DOMAIN = "tagpro-radius.koalabeast.com"
-
 
 BOT_USER_AGENT = "/r/tagpro flair helper"
 

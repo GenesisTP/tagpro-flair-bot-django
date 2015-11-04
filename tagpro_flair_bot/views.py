@@ -1,4 +1,4 @@
-from BeautifulSoup import BeautifulSoup
+﻿from BeautifulSoup import BeautifulSoup
 import json
 import praw
 import requests
@@ -56,28 +56,29 @@ def parse_available_flair(html_soup):
     return flairs
 
 
-def clean_tagpro_url(url):
+def parse_tagpro_url(url):
     """
-    Create our own URL by parsing the profile id and getting the profile from
-    a trusted domain like tagpro-origin.koalabeast.com.
+    Parse the profile id to get the profile from a trusted domain like
+    tagpro-origin.koalabeast.com.
     """
-    path = urlparse(url).path
+    base, path = urlparse(url).netloc, urlparse(url).path
     
     # /profile/555.../ to a list of path elements, without any empty strings
     # so, id = ['profile', 'id'][1]
+    tagpro_server = filter(None, filter(None, base.split('.'))[0].split('-'))[1]
     tagpro_profile_id = filter(None, path.split('/'))[1]
-    return "http://{domain}/profile/{id}/".format(
-        domain=settings.TAGPRO_PROFILE_DOMAIN,
-        id=tagpro_profile_id)
+    return tagpro_server, tagpro_profile_id
 
 
-def get_tagpro_profile(profile_url):
+def get_tagpro_profile(server, profile_id):
     """
-    Retrieve the TagPro profile associated with the given `profile_url`
-    after cleaning it.
+    Retrieve the TagPro profile associated with the given `profile_id`
+    after parsing it.
     """
-    cleaned_url = clean_tagpro_url(profile_url)
-    response = requests.get(cleaned_url)
+    profile_url = "http://tagpro-{domain}.koalabeast.com/profile/{id}/".format(
+        domain=server,
+        id=profile_id)
+    response = requests.get(profile_url)
     return response
 
 
@@ -88,7 +89,8 @@ def auth_tagpro(request):
     token = request.session.get('tagpro_token')
     try:
         profile_url = request.POST.get('profile_url')
-        response = get_tagpro_profile(profile_url)
+        server, profile_id = parse_tagpro_url(profile_url)
+        response = get_tagpro_profile(server, profile_id)
     except:
         messages.error(request, "Please enter a valid TagPro profile URL.")
         return redirect_home()
@@ -96,7 +98,8 @@ def auth_tagpro(request):
     tagpro_name = parsed.title.getString()[len("TagPro Ball: "):]
     if tagpro_name.replace(' ', '') == token.replace(' ', ''):
         request.session['tp_authenticated'] = True
-        request.session['tp_profile'] = profile_url
+        request.session['tp_server'] = server
+        request.session['tp_profile_id'] = profile_id
         request.session['current_flair'] = get_current_flair(request)
         request.session['available_flair'] = parse_available_flair(parsed)
     else:
@@ -120,8 +123,9 @@ def refresh_flair(request):
         messages.error(request, "You have not authenticated your TagPro account!")
         return redirect_home()
     try:
-        profile_url = request.session['tp_profile']
-        response = get_tagpro_profile(profile_url)
+        server = request.session['tp_server']
+        profile_id = request.session['tp_profile_id']
+        response = get_tagpro_profile(server, profile_id)
     except:
         messages.error(request, "Unable to retrieve flair, please check your TagPro URL.")
         return redirect_home()

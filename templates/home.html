@@ -20,7 +20,11 @@
 <p><em>Link your TagPro account</em></p>
 {% if backends.associated %}
     {% if request.session.tp_authenticated %}
-        <p>Authenticated with TagPro Profile <a href="{{ request.session.tp_profile }}">{{ request.session.tp_profile }}</a></p>
+        <p>Authenticated with TagPro Profile
+            <a href="http://tagpro-{{ request.session.tp_server }}.koalabeast.com/profile/{{ request.session.tp_profile_id }}">
+                http://tagpro-{{ request.session.tp_server }}.koalabeast.com/profile/{{ request.session.tp_profile_id }}
+            </a>
+        </p>
     {% else %}
         <p>Change your name to <strong>{{ request.session.tagpro_token }}</strong></p>
         <p>Then, enter your profile URL below:</p>
