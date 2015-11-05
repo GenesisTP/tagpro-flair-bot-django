@@ -1,5 +1,7 @@
 /* Overrides for the tagpro.gg stylesheet */
-body { overflow: visible;}
+body {
+    overflow: visible;
+}
 
 article {
     width: 800px;
@@ -26,17 +28,25 @@ h2 {
     line-height: 200%;
 }
 
-h3
-{
+h3 {
     font-size: 100%;
     text-align: left;
 }
-h3 > a
-{
+
+h3 > a {
     display: block;
     font-size: 100%;
 }
 
 div.flair {
     background-image: url('../img/flair.png');
+}
+
+div.flair.special {
+    background-image: url('../img/special-flair.png');
+    color: #555;
+    font-family: Consolas, monospace;
+    font-size: 9px;
+    font-weight: bold;
+    line-height: 22px;
 }

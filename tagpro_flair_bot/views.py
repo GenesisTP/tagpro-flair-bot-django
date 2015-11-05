@@ -11,6 +11,7 @@ from django.shortcuts import redirect
 from django.views.generic import TemplateView
 from social_auth.pipeline import deauth_tagpro as deauth_tagpro_pipeline
 from tpflair.flair import FLAIR_DATA, FLAIR, FLAIR_BY_POSITION
+from tpflair.special_flair import USER_BY_REDDIT, USER_BY_TAGPRO, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
 
 import logging
 logger = logging.getLogger(__name__)
@@ -32,9 +33,18 @@ class HomeView(TemplateView):
     
     def get_context_data(self):
         context = super(HomeView, self).get_context_data()
-        context.update({'FLAIR_DATA': FLAIR_DATA})
+        context.update({
+            'FLAIR_DATA': FLAIR_DATA,
+            'SPECIAL_FLAIR_DATA': SPECIAL_FLAIR_DATA,
+        })
         return context
 
+
+def get_available_flair(request, parsed):
+    """
+    Retrieve all flair available to a user.
+    """
+    return parse_available_flair(parsed) + get_available_special_flair(request)
 
 def parse_available_flair(html_soup):
     """
@@ -53,6 +63,21 @@ def parse_available_flair(html_soup):
             except KeyError:
                 logger.warn("New flair at position %(position)s",
                     extra={'position': position, 'row': row})
+    return flairs
+
+def get_available_special_flair(request):
+    """
+    Parse the TagPro wiki to retrieve all special flair available to a user.
+    """
+    user = None
+    if request.session['tp_profile_id'] in USER_BY_TAGPRO.keys():
+        user = USER_BY_TAGPRO[request.session['tp_profile_id']]['name']
+    elif request.user.username in USER_BY_REDDIT.keys():
+        user = USER_BY_REDDIT[request.user.username]['name']
+    flairs = []
+    for name, flair in USER_FLAIR_DATA:
+        if name == user:
+            flairs.append(flair)
     return flairs
 
 
@@ -101,7 +126,7 @@ def auth_tagpro(request):
         request.session['tp_server'] = server
         request.session['tp_profile_id'] = profile_id
         request.session['current_flair'] = get_current_flair(request)
-        request.session['available_flair'] = parse_available_flair(parsed)
+        request.session['available_flair'] = get_available_flair(request, parsed)
     else:
         messages.error(request, "Your name doesn't match the token!")
     return redirect_home()
@@ -130,7 +155,7 @@ def refresh_flair(request):
         messages.error(request, "Unable to retrieve flair, please check your TagPro URL.")
         return redirect_home()
     parsed = BeautifulSoup(response.text)
-    request.session['available_flair'] = parse_available_flair(parsed)
+    request.session['available_flair'] = get_available_flair(request, parsed)
     return redirect_home()
 
 
@@ -146,7 +171,7 @@ def set_flair(request):
     if (
             'available_flair' in request.session and 
             flair in request.session['available_flair'] and 
-            flair in FLAIR.keys()):
+            (flair in FLAIR.keys() or flair in SPECIAL_FLAIR.keys())):
         request.session['current_flair'] = request.session['current_flair'] or get_current_flair(request)
         flair_text = request.session['current_flair'].get('flair_text', '')
         reddit_api.set_flair(

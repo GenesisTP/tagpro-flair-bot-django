@@ -73,6 +73,22 @@
                 </td>
             </tr>
         {% endfor %}
+        {% for flair, name, position, size in SPECIAL_FLAIR_DATA %}
+            {% if flair in request.session.available_flair %}
+                <tr>
+                    <td>
+                        <div style="background-position: {{ position }}; width: {{ size }}; height: {{ size }}" class="flair special">
+                            {% ifequal flair|slice:"1" "-" %} {{ flair|slice:"2:" }} {% endifequal %}
+                        </div>
+                    </td>
+                    <td>{{ name|safe }}</td>
+                    <td>
+                        <input type="radio" name="flair" value="{{ flair }}" 
+                            {% ifequal flair request.session.current_flair.flair_css_class %}checked="checked"{% endifequal %} />
+                    </td>
+                </tr>
+            {% endif %}
+        {% endfor %}
         </tbody>
     </table>
     <input type="submit" value="Set flair" />
