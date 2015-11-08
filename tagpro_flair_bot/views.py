@@ -38,7 +38,7 @@ def parse_wiki_tables(request):
     """
     Parse the TagPro wiki to retrieve its flair data.
     """
-    global FLAIR_DATA, FLAIR, FLAIR_BY_POSITION, USER_BY_REDDIT, USER_BY_TAGPRO, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
+    global FLAIR_DATA, FLAIR, FLAIR_BY_POSITION, USER_DATA, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
     page = reddit_api.get_wiki_page(settings.REDDIT_MOD_SUBREDDIT, 'flair/flairbot')
     
     tables = []
@@ -54,9 +54,6 @@ def parse_wiki_tables(request):
     FLAIR_BY_POSITION = dict((p, {'id': k, 'title': t}) for k, t, p in FLAIR_DATA)
     
     SPECIAL_FLAIR = dict((k, {'position': p, 'size': s, 'title': t}) for k, t, p, s in SPECIAL_FLAIR_DATA)
-    
-    USER_BY_REDDIT = dict((r, {'name': k, 'tagpro': t}) for k, r, t in USER_DATA)
-    USER_BY_TAGPRO = dict((t, {'name': k, 'reddit': r}) for k, r, t in USER_DATA)
     
     request.session['flair_data'] = FLAIR_DATA
     request.session['special_flair_data'] = SPECIAL_FLAIR_DATA
@@ -86,13 +83,12 @@ def get_available_special_flair(request):
     Retrieve all special flair available to a user.
     """
     user = None
-    if request.session['tp_profile_id'] in USER_BY_TAGPRO.keys():
-        user = USER_BY_TAGPRO[request.session['tp_profile_id']]['name']
-    elif request.user.username in USER_BY_REDDIT.keys():
-        user = USER_BY_REDDIT[request.user.username]['name']
+    for name, reddit, tagpro in USER_DATA:
+        if tagpro.lower() == request.session['tp_profile_id'].lower() or reddit.lower() == request.user.username.lower():
+            user = name
     flairs = []
     for name, flair in USER_FLAIR_DATA:
-        if name == user:
+        if name.lower() == user.lower():
             flairs.append(flair)
     return flairs
 
