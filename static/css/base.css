@@ -39,11 +39,7 @@ h3 > a {
 }
 
 div.flair {
-    background-image: url('../img/flair.png');
-}
-
-div.flair.special {
-    background-image: url('../img/special-flair.png');
+    background-image: url('http://tagpro-radius.koalabeast.com/images/flair.png');
     color: #555;
     font-family: Consolas, monospace;
     font-size: 9px;

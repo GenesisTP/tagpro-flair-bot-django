@@ -13,13 +13,17 @@ def set_token(strategy, details, user=None, *args, **kwargs):
 
 def deauth_tagpro(*args, **kwargs):
     request = kwargs.get('strategy').request
-    if 'tp_authenticated' in request.session:
-        del request.session['tp_authenticated']
-    if 'tp_server' in request.session:
-        del request.session['tp_server']
-    if 'tp_profile_id' in request.session:
-        del request.session['tp_profile_id']
-    if 'available_flair' in request.session:
-        del request.session['available_flair']
-    if 'current_flair' in request.session:
-        del request.session['current_flair']
+    keys = [
+        'tp_authenticated',
+        'tp_server',
+        'tp_profile_id',
+        'flair_data',
+        'available_flair',
+        'special_flair_data',
+        'available_special_flair',
+        'special_flair_img',
+        'current_flair',
+    ]
+    for key in keys:
+        if key in request.session:
+            del request.session[key]

@@ -10,8 +10,6 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.views.generic import TemplateView
 from social_auth.pipeline import deauth_tagpro as deauth_tagpro_pipeline
-from tpflair.flair import FLAIR_DATA, FLAIR, FLAIR_BY_POSITION
-from tpflair.special_flair import USER_BY_REDDIT, USER_BY_TAGPRO, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
 
 import logging
 logger = logging.getLogger(__name__)
@@ -33,18 +31,36 @@ class HomeView(TemplateView):
     
     def get_context_data(self):
         context = super(HomeView, self).get_context_data()
-        context.update({
-            'FLAIR_DATA': FLAIR_DATA,
-            'SPECIAL_FLAIR_DATA': SPECIAL_FLAIR_DATA,
-        })
         return context
 
 
-def get_available_flair(request, parsed):
+def parse_wiki_tables(request):
     """
-    Retrieve all flair available to a user.
+    Parse the TagPro wiki to retrieve its flair data.
     """
-    return parse_available_flair(parsed) + get_available_special_flair(request)
+    global FLAIR_DATA, FLAIR, FLAIR_BY_POSITION, USER_BY_REDDIT, USER_BY_TAGPRO, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
+    page = reddit_api.get_wiki_page(settings.REDDIT_MOD_SUBREDDIT, 'flair/flairbot')
+    
+    tables = []
+    for section in page.content_md.split('-|-\r\n')[1:]:
+        table = []
+        for row in section.split('\r\n\r\n')[0].split('\r\n'):
+            table.append(tuple(cell.strip() for cell in row.split('|')))
+        tables.append(table)
+    
+    FLAIR_DATA, SPECIAL_FLAIR_DATA, USER_DATA, USER_FLAIR_DATA = tables
+    
+    FLAIR = dict((k, {'position': p, 'title': t}) for k, t, p in FLAIR_DATA)
+    FLAIR_BY_POSITION = dict((p, {'id': k, 'title': t}) for k, t, p in FLAIR_DATA)
+    
+    SPECIAL_FLAIR = dict((k, {'position': p, 'size': s, 'title': t}) for k, t, p, s in SPECIAL_FLAIR_DATA)
+    
+    USER_BY_REDDIT = dict((r, {'name': k, 'tagpro': t}) for k, r, t in USER_DATA)
+    USER_BY_TAGPRO = dict((t, {'name': k, 'reddit': r}) for k, r, t in USER_DATA)
+    
+    request.session['flair_data'] = FLAIR_DATA
+    request.session['special_flair_data'] = SPECIAL_FLAIR_DATA
+
 
 def parse_available_flair(html_soup):
     """
@@ -67,7 +83,7 @@ def parse_available_flair(html_soup):
 
 def get_available_special_flair(request):
     """
-    Parse the TagPro wiki to retrieve all special flair available to a user.
+    Retrieve all special flair available to a user.
     """
     user = None
     if request.session['tp_profile_id'] in USER_BY_TAGPRO.keys():
@@ -79,6 +95,17 @@ def get_available_special_flair(request):
         if name == user:
             flairs.append(flair)
     return flairs
+
+
+def get_special_flair_img():
+    """
+    Use the subreddit's flair sprite to create special flairs.
+    """
+    sub = reddit_api.get_subreddit(settings.REDDIT_MOD_SUBREDDIT)
+    style = sub.get_stylesheet()
+    for image in style.get('images'):
+        if image['name'] == 'flair':
+            return image['url']
 
 
 def parse_tagpro_url(url):
@@ -122,11 +149,14 @@ def auth_tagpro(request):
     parsed = BeautifulSoup(response.text)
     tagpro_name = parsed.title.getString()[len("TagPro Ball: "):]
     if tagpro_name.replace(' ', '') == token.replace(' ', ''):
+        parse_wiki_tables(request)
         request.session['tp_authenticated'] = True
         request.session['tp_server'] = server
         request.session['tp_profile_id'] = profile_id
         request.session['current_flair'] = get_current_flair(request)
-        request.session['available_flair'] = get_available_flair(request, parsed)
+        request.session['available_flair'] = parse_available_flair(parsed)
+        request.session['available_special_flair'] = get_available_special_flair(request)
+        request.session['special_flair_img'] = get_special_flair_img()
     else:
         messages.error(request, "Your name doesn't match the token!")
     return redirect_home()
@@ -152,10 +182,13 @@ def refresh_flair(request):
         profile_id = request.session['tp_profile_id']
         response = get_tagpro_profile(server, profile_id)
     except:
-        messages.error(request, "Unable to retrieve flair, please check your TagPro URL.")
+        messages.error(request, "Unable to retrieve flair. Please check your TagPro URL.")
         return redirect_home()
     parsed = BeautifulSoup(response.text)
-    request.session['available_flair'] = get_available_flair(request, parsed)
+    parse_wiki_tables(request)
+    request.session['available_flair'] = parse_available_flair(parsed)
+    request.session['available_special_flair'] = get_available_special_flair(request)
+    request.session['special_flair_img'] = get_special_flair_img()
     return redirect_home()
 
 
@@ -168,10 +201,15 @@ def set_flair(request):
     Set the user's flair for the subreddit.
     """
     flair = request.POST.get('flair', None)
-    if (
+    if ((
             'available_flair' in request.session and 
             flair in request.session['available_flair'] and 
-            (flair in FLAIR.keys() or flair in SPECIAL_FLAIR.keys())):
+            flair in FLAIR.keys()
+        ) or (
+            'available_special_flair' in request.session and 
+            flair in request.session['available_special_flair'] and 
+            flair in SPECIAL_FLAIR.keys()
+        )):
         request.session['current_flair'] = request.session['current_flair'] or get_current_flair(request)
         flair_text = request.session['current_flair'].get('flair_text', '')
         reddit_api.set_flair(
