@@ -34,21 +34,15 @@ class HomeView(TemplateView):
         return context
 
 
-def parse_wiki_tables(request):
+def parse_wiki(request):
     """
     Parse the TagPro wiki to retrieve its flair data.
     """
     global FLAIR_DATA, FLAIR, FLAIR_BY_POSITION, USER_DATA, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
     page = reddit_api.get_wiki_page(settings.REDDIT_MOD_SUBREDDIT, 'flair/flairbot')
     
-    tables = []
-    for section in page.content_md.split('-|-\r\n')[1:]:
-        table = []
-        for row in section.split('\r\n\r\n')[0].split('\r\n'):
-            table.append(tuple(cell.strip() for cell in row.split('|')))
-        tables.append(table)
-    
-    FLAIR_DATA, SPECIAL_FLAIR_DATA, USER_DATA, USER_FLAIR_DATA = tables
+    texts, tables = parse_wiki_tables(page.content_md)
+    FLAIR_DATA, SPECIAL_FLAIR_DATA, USER_DATA, USER_FLAIR_DATA = [i[1] for i in tables]
     
     FLAIR = dict((k, {'position': p, 'title': t}) for k, t, p in FLAIR_DATA)
     FLAIR_BY_POSITION = dict((p, {'id': k, 'title': t}) for k, t, p in FLAIR_DATA)
@@ -57,6 +51,45 @@ def parse_wiki_tables(request):
     
     request.session['flair_data'] = FLAIR_DATA
     request.session['special_flair_data'] = SPECIAL_FLAIR_DATA
+
+def parse_wiki_tables(md):
+    texts, text = [], []
+    tables, table = [], [[],[]]
+    for line in md.split('\r\n'):
+        if len(table[0]) == 2:
+            if '|' in line:
+                table[1].append(tuple(cell.strip() for cell in line.split('|')))
+            else:
+                tables.append(table)
+                table = [[],[]]
+                text.append(line)
+        elif len(table[0]) == 1:
+            components = line.strip('|').split('|')
+            for i, component in enumerate(components):
+                kept, last = [], ''
+                for char in component:
+                    if char != last:
+                        kept.append(char)
+                    last = char
+                components[i] = ''.join(kept)
+            align = {'-': 'left', ':-': 'left', '-:': 'right', ':-:': 'center'}
+            try:
+                table[0].append(tuple(align[i] for i in components))
+                texts.append('\r\n'.join(text[:-1]))
+                text = []
+            except KeyError:
+                table = [[],[]]
+                text.append(line)
+        elif '|' in line:
+            table[0].append(tuple(cell.strip() for cell in line.split('|')))
+            text.append(line)
+        else:
+            text.append(line)
+    if len(table[0]) == 2:
+        tables.append(table)
+    else:
+        texts.append('\r\n'.join(text))
+    return texts, tables
 
 
 def parse_available_flair(html_soup):
@@ -145,7 +178,7 @@ def auth_tagpro(request):
     parsed = BeautifulSoup(response.text)
     tagpro_name = parsed.title.getString()[len("TagPro Ball: "):]
     if tagpro_name.replace(' ', '') == token.replace(' ', ''):
-        parse_wiki_tables(request)
+        parse_wiki(request)
         request.session['tp_authenticated'] = True
         request.session['tp_server'] = server
         request.session['tp_profile_id'] = profile_id
@@ -181,7 +214,7 @@ def refresh_flair(request):
         messages.error(request, "Unable to retrieve flair. Please check your TagPro URL.")
         return redirect_home()
     parsed = BeautifulSoup(response.text)
-    parse_wiki_tables(request)
+    parse_wiki(request)
     request.session['available_flair'] = parse_available_flair(parsed)
     request.session['available_special_flair'] = get_available_special_flair(request)
     request.session['special_flair_img'] = get_special_flair_img()
