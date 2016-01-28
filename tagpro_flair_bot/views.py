@@ -41,7 +41,7 @@ def parse_wiki(request):
     global FLAIR_DATA, FLAIR, FLAIR_BY_POSITION, USER_DATA, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
     page = reddit_api.get_wiki_page(settings.REDDIT_MOD_SUBREDDIT, 'flair/flairbot')
     
-    texts, tables = parse_wiki_tables(page.content_md)
+    tables = parse_wiki_tables(page.content_md)[1]
     FLAIR_DATA, SPECIAL_FLAIR_DATA, USER_DATA, USER_FLAIR_DATA = [i[1] for i in tables]
     
     FLAIR = dict((k, {'position': p, 'title': t}) for k, t, p in FLAIR_DATA)
@@ -115,7 +115,7 @@ def get_available_special_flair(request):
     """
     Retrieve all special flair available to a user.
     """
-    user = None
+    user = ''
     for name, reddit, tagpro in USER_DATA:
         if tagpro.lower() == request.session['tp_profile_id'].lower() or reddit.lower() == request.user.username.lower():
             user = name
