@@ -61,6 +61,11 @@ The following *environmental variables* need to be set to run the app:
     moderator of ``REDDIT_MOD_SUBREDDIT``.
 * ``REDDIT_MOD_PASSWORD``
     * Reddit password for ``REDDIT_MOD_USERNAME``.
+* ``REDDIT_WIKI_SUBREDDIT``
+    * Subreddit containing a wiki with flair tables. Default is
+    ``REDDIT_MOD_SUBREDDIT``.
+* ``REDDIT_WIKI_PAGE``
+    * Page with flair tables in subreddit wiki.
 * ``RAVEN_PUBLIC_KEY``, ``RAVEN_PRIVATE_KEY``, ``RAVEN_PROJECT_ID``
     * If you're running your own instance and you want error reporting through
     Sentry, set these to what Sentry provides for your DSN. The format is

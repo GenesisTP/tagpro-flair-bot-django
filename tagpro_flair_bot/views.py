@@ -39,7 +39,7 @@ def parse_wiki(request):
     Parse the TagPro wiki to retrieve its flair data.
     """
     global FLAIR_DATA, FLAIR, FLAIR_BY_POSITION, USER_DATA, SPECIAL_FLAIR_DATA, SPECIAL_FLAIR, USER_FLAIR_DATA
-    page = reddit_api.get_wiki_page(settings.REDDIT_MOD_SUBREDDIT, 'flair/flairbot')
+    page = reddit_api.get_wiki_page(settings.REDDIT_WIKI_SUBREDDIT or settings.REDDIT_MOD_SUBREDDIT, settings.REDDIT_WIKI_PAGE)
     
     tables = parse_wiki_tables(page.content_md)[1]
     FLAIR_DATA, SPECIAL_FLAIR_DATA, USER_DATA, USER_FLAIR_DATA = [i[1] for i in tables]
