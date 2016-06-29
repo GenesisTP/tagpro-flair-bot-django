@@ -97,13 +97,13 @@ def parse_available_flair(html_soup):
     Helper function which pulls the active flairs from the parsed HTML of a
     user's profile page.
     """
-    flair_table = html_soup.findAll('table')[4]
-    rows = flair_table.findAll('tr')
+    flair_table = html_soup.find(id='owned-flair')
+    rows = flair_table.findAll('li')
     flairs = []
     for row in rows:
-        icon = row.find('div')
-        if icon and row.get("class", "") != "fade":
-            position = str(icon['style'][len('background-position: '):])
+        icon = row.find('span')
+        if icon and row.get("data-flair", ""):
+            position = str(icon['style'][len('background-position: '):-len(';')])
             try:
                 flairs.append(FLAIR_BY_POSITION[position]['id'])
             except KeyError:
