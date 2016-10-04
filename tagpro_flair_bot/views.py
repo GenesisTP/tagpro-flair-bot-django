@@ -97,18 +97,17 @@ def parse_available_flair(html_soup):
     Helper function which pulls the active flairs from the parsed HTML of a
     user's profile page.
     """
-    flair_table = html_soup.find(id='owned-flair')
-    rows = flair_table.findAll('li')
+    flair_table = html_soup.find(id='all-flair')
+    rows = flair_table.findAll('li', {'class': lambda x: 'flair-available' in x.split()})
     flairs = []
     for row in rows:
         icon = row.find('span')
-        if icon and row.get("data-flair", ""):
-            position = str(icon['style'][len('background-position: '):-len(';')])
-            try:
-                flairs.append(FLAIR_BY_POSITION[position]['id'])
-            except KeyError:
-                logger.warn("New flair at position %(position)s",
-                    extra={'position': position, 'row': row})
+        position = str(icon['style'][len('background-position: '):-len(';')])
+        try:
+            flairs.append(FLAIR_BY_POSITION[position]['id'])
+        except KeyError:
+            logger.warn("New flair at position %(position)s",
+                extra={'position': position, 'row': row})
     return flairs
 
 def get_available_special_flair(request):
@@ -230,6 +229,7 @@ def set_flair(request):
     Set the user's flair for the subreddit.
     """
     flair = request.POST.get('flair', None)
+    parse_wiki(request)
     if ((
             'available_flair' in request.session and 
             flair in request.session['available_flair'] and 
