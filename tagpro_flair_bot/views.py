@@ -239,7 +239,7 @@ def set_flair(request):
             flair in request.session['available_special_flair'] and 
             flair in SPECIAL_FLAIR.keys()
         )):
-        request.session['current_flair'] = request.session['current_flair'] or get_current_flair(request)
+        request.session['current_flair'] = get_current_flair(request)
         flair_text = request.session['current_flair'].get('flair_text', '')
         reddit_api.set_flair(
             settings.REDDIT_MOD_SUBREDDIT,
